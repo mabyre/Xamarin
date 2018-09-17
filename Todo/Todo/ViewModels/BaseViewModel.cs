@@ -12,7 +12,7 @@ namespace Todo.ViewModels
 {
     public class BaseViewModel : INotifyPropertyChanged
     {
-        public IDataStore<Item> DataStore => DependencyService.Get<IDataStore<Item>>() ?? new MockDataStore();
+        public IDataStore<Item> DataStore => DependencyService.Get<IDataStore<Item>>() ?? App.Database;
 
         bool isBusy = false;
         public bool IsBusy

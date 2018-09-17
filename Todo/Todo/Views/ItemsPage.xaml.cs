@@ -42,9 +42,11 @@ namespace Todo.Views
             await Navigation.PushModalAsync(new NavigationPage(new NewItemPage()));
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
+
+            ItemsListView.ItemsSource = await App.Database.GetItemsAsync();
 
             if (viewModel.Items.Count == 0)
                 viewModel.LoadItemsCommand.Execute(null);

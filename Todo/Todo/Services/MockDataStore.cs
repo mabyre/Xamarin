@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SQLite;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,59 +9,72 @@ namespace Todo.Services
 {
     public class MockDataStore : IDataStore<Item>
     {
-        List<Item> items;
+        readonly SQLiteAsyncConnection database;
 
-        public MockDataStore()
+        public MockDataStore(string dbPath)
         {
-            items = new List<Item>();
-            var mockItems = new List<Item>
-            {
-                new Item { Id = Guid.NewGuid().ToString(), Text = "First item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Second item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Third item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Fourth item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Fifth item", Description="This is an item description." },
-                new Item { Id = Guid.NewGuid().ToString(), Text = "Sixth item", Description="This is an item description." },
-            };
+            database = new SQLiteAsyncConnection(dbPath);
+            database.CreateTableAsync<Item>().Wait();
 
-            foreach (var item in mockItems)
+            // TEST PURPOSE
+            Item it1 = new Item { ID = 1, Text = "Premier item", Description = "Première desciption", Done = false };
+            Item it2 = new Item { ID = 2, Text = "Deuxieme item", Description = "Deuxieme desciption", Done = false };
+
+            database.InsertAsync(it1);
+            database.InsertAsync(it2);
+
+        }
+
+        public Task<List<Item>> GetItemsAsync()
+        {
+            return database.Table<Item>().ToListAsync();
+        }
+
+        public Task<List<Item>> GetItemsNotDoneAsync()
+        {
+            return database.QueryAsync<Item>("SELECT * FROM [TodoItem] WHERE [Done] = 0");
+        }
+
+        public Task<int> SaveItemAsync(Item item)
+        {
+            if (item.ID != 0)
             {
-                items.Add(item);
+                return database.UpdateAsync(item);
+            }
+            else
+            {
+                return database.InsertAsync(item);
             }
         }
 
-        public async Task<bool> AddItemAsync(Item item)
+        public Task<int> DeleteItemAsync(Item item)
         {
-            items.Add(item);
-
-            return await Task.FromResult(true);
+            return database.DeleteAsync(item);
         }
 
-        public async Task<bool> UpdateItemAsync(Item item)
+        public Task<bool> AddItemAsync(Item item)
         {
-            var oldItem = items.Where((Item arg) => arg.Id == item.Id).FirstOrDefault();
-            items.Remove(oldItem);
-            items.Add(item);
-
-            return await Task.FromResult(true);
+            throw new NotImplementedException();
         }
 
-        public async Task<bool> DeleteItemAsync(string id)
+        public Task<bool> UpdateItemAsync(Item item)
         {
-            var oldItem = items.Where((Item arg) => arg.Id == id).FirstOrDefault();
-            items.Remove(oldItem);
-
-            return await Task.FromResult(true);
+            throw new NotImplementedException();
         }
 
-        public async Task<Item> GetItemAsync(string id)
+        public Task<bool> DeleteItemAsync(string id)
         {
-            return await Task.FromResult(items.FirstOrDefault(s => s.Id == id));
+            throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<Item>> GetItemsAsync(bool forceRefresh = false)
+        public Task<Item> GetItemAsync(string id)
         {
-            return await Task.FromResult(items);
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<Item>> GetItemsAsync(bool forceRefresh = false)
+        {
+            throw new NotImplementedException();
         }
     }
 }
